@@ -1,54 +1,259 @@
-/* .layout {
-    width: 100%;
-  
-    display: grid;
-    grid:
-      "header header header" auto
-      "leftSide body rightSide" 1fr
-      "footer footer footer" auto
-      / auto 1fr auto;
-    gap: 8px;
-  }
-  
-  .header { grid-area: header; }
-  .leftSide { grid-area: leftSide; }
-  .body { grid-area: body; }
-  .rightSide { grid-area: rightSide; }
-  .footer { grid-area: footer; } */
-
+/* ── Reset & Base ─────────────────────────────────────────────────────────── */
 * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --ocean-dark:    #020d18;
+    --ocean-mid:     #04233a;
+    --ocean-blue:    #0a4a6e;
+    --biolume:       #00d4ff;
+    --biolume-glow:  rgba(0, 212, 255, 0.18);
+    --text-primary:  #d0eeff;
+    --text-muted:    #6fa8c8;
+    --panel-bg:      rgba(2, 18, 32, 0.72);
+    --panel-border:  rgba(0, 180, 230, 0.2);
+    --font-display:  'Cinzel', serif;
+    --font-body:     'Raleway', sans-serif;
 }
 
 body {
-    font-family: sans-serif;
-    -webkit-font-smoothing: auto;
+    font-family: var(--font-body);
+    font-weight: 300;
+    color: var(--text-primary);
+    background: var(--ocean-dark);
+    -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    font-smooth: always;
-    -webkit-tap-highlight-color: transparent;
-    background: url("../hosted/media/waterBackground.mp4") no-repeat fixed center;
+    overflow-x: hidden;
 }
 
-main {
+/* ── Background Video ─────────────────────────────────────────────────────── */
+video#bgVideo {
+    position: fixed;
+    inset: 0;
     width: 100%;
-    height: 100vh;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    opacity: 0.45;
+}
+
+/* ── Nav ──────────────────────────────────────────────────────────────────── */
+.site-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 18px 24px 14px;
+    background: linear-gradient(to bottom, rgba(2,13,24,0.9) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.nav-title {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+}
+
+.nav-sub {
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+
+/* ── Main Layout ──────────────────────────────────────────────────────────── */
+main {
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 100px 24px 48px;
 }
 
-video#bgVideo {
-    position: fixed;
-    right: 0;
-    bottom: 0;
-    width: auto;
-    min-width: 100%;
-    height: auto;
-    min-height: 100%;
-    z-index: -100;
-    background-size: cover;
+/* ── Viewer Section ───────────────────────────────────────────────────────── */
+.viewer-section {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: fadeUp 0.9s ease both;
 }
 
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Specimen Header ──────────────────────────────────────────────────────── */
+.viewer-header {
+    text-align: center;
+}
+
+.specimen-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 4vw, 2.4rem);
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    color: var(--text-primary);
+}
+
+.specimen-subtitle {
+    font-size: 0.8rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+/* ── Model Controls ───────────────────────────────────────────────────────── */
+.model-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+}
+
+.control-label {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.model-select {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    backdrop-filter: blur(8px);
+    min-width: 220px;
+}
+
+.model-select:focus,
+.model-select:hover {
+    border-color: var(--biolume);
+    box-shadow: 0 0 0 3px var(--biolume-glow);
+}
+
+.model-select option {
+    background: var(--ocean-mid);
+    color: var(--text-primary);
+}
+
+/* ── Viewer Canvas Container ──────────────────────────────────────────────── */
+.viewer-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
+    overflow: hidden;
+    background: linear-gradient(160deg, rgba(4,35,58,0.85) 0%, rgba(2,13,24,0.92) 100%);
+    border: 1px solid var(--panel-border);
+    box-shadow:
+        0 0 0 1px rgba(0,180,230,0.08),
+        0 24px 60px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(0,180,230,0.12);
+    backdrop-filter: blur(12px);
+}
+
+.viewer-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+/* ── Status Overlay ───────────────────────────────────────────────────────── */
+.viewer-status {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--biolume);
+    pointer-events: none;
+    text-align: center;
+}
+
+/* ── Interaction Hint ─────────────────────────────────────────────────────── */
+.viewer-hint {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(160, 210, 230, 0.45);
+    pointer-events: none;
+    transition: opacity 0.4s;
+}
+
+.viewer-container:hover .viewer-hint {
+    opacity: 0;
+}
+
+/* ── Info Card ────────────────────────────────────────────────────────────── */
+.specimen-info {
+    animation: fadeUp 1.1s ease 0.2s both;
+}
+
+.info-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 20px 24px;
+    backdrop-filter: blur(8px);
+}
+
+.info-card h3 {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--biolume);
+    margin-bottom: 10px;
+}
+
+.info-card p {
+    font-size: 0.82rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+}
+
+.info-card code {
+    font-size: 0.78rem;
+    background: rgba(0, 180, 230, 0.1);
+    border: 1px solid rgba(0, 180, 230, 0.2);
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: var(--biolume);
+    font-family: 'Courier New', monospace;
+}
+
+/* ── Loading Dots (retained from original) ───────────────────────────────── */
 .loader {
     display: flex;
     flex-direction: row;
@@ -63,18 +268,40 @@ video#bgVideo {
     animation: bounce 0.5s infinite alternate;
 }
 
-.loader .dot:nth-child(2) {
-    animation-delay: 100ms;
-}
+.loader .dot:nth-child(2) { animation-delay: 100ms; }
+.loader .dot:nth-child(3) { animation-delay: 200ms; }
 
-.loader .dot:nth-child(3) {
-    animation-delay: 200ms;
-}
-
-
-/* defined animation */
 @keyframes bounce {
-    100% {
-        translate: 0 -10px;
+    100% { translate: 0 -10px; }
+}
+
+/* ── Error Message ────────────────────────────────────────────────────────── */
+#domoMessage {
+    background: rgba(180, 30, 30, 0.2);
+    border: 1px solid rgba(255, 80, 80, 0.3);
+    border-radius: 4px;
+    padding: 10px 16px;
+    color: #ff9090;
+    font-size: 0.82rem;
+    text-align: center;
+}
+
+#domoMessage.hidden {
+    display: none;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+    .model-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .model-select {
+        min-width: unset;
+        width: 100%;
+    }
+    .viewer-hint {
+        gap: 12px;
+        font-size: 0.6rem;
     }
 }

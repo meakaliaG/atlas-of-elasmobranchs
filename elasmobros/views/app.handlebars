@@ -1,27 +1,80 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Atlas of Elasmobranchs</title>
-
-    {{!-- <link rel="shortcut icon" href="/assets/img/favicon.png"/> --}}
     <link rel="stylesheet" type="text/css" href="/assets/style.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Raleway:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
 </head>
 <body>
-    <nav></nav>
+
+    <video id="bgVideo" src="/assets/media/waterBackground.mp4" preload="auto" autoplay loop muted playsinline></video>
+
+    <nav class="site-nav">
+        <span class="nav-title">Atlas of Elasmobranchs</span>
+        <span class="nav-sub">Interactive 3D Specimen Viewer</span>
+    </nav>
+
     <main>
-        <div class="loader">
-            <div class="dot"></div>
-            <br>
-            <div class="dot"></div>
-             <br>
-            <div class="dot"></div>
-        </div>
+
+        <!-- ── 3D Viewer Panel ── -->
+        <section class="viewer-section">
+
+            <div class="viewer-header">
+                <h1 class="specimen-title" id="specimenTitle">Select a Specimen</h1>
+                <p class="specimen-subtitle" id="specimenSubtitle">Use the menu below to load a model, then drag to rotate</p>
+            </div>
+
+            <!-- Model selector -->
+            <div class="model-controls">
+                <label class="control-label" for="modelSelect">Specimen</label>
+                <select id="modelSelect" class="model-select">
+                    <option value="">— choose a specimen —</option>
+                    <!--
+                        Drop model files into hosted/models/ and add entries here.
+                        GLTF/GLB example:   <option value="great_white.glb">Great White Shark</option>
+                        OBJ example:        <option value="hammerhead.obj">Hammerhead Shark</option>
+                        The viewer.js loader auto-detects the extension.
+                    -->
+                    <option value="placeholder">Placeholder Shark (built-in)</option>
+                    <option value="juvenileGreat.obj">Juvenile Great White</option>
+
+                </select>
+            </div>
+
+            <!-- Canvas wrapper -->
+            <div id="viewerContainer" class="viewer-container">
+                <canvas id="modelCanvas"></canvas>
+                <div id="viewerStatus" class="viewer-status" style="display:none;"></div>
+
+                <!-- Interaction hint -->
+                <div class="viewer-hint" id="viewerHint">
+                    <span>⟳ drag to rotate</span>
+                    <span>⊕ scroll to zoom</span>
+                </div>
+            </div>
+
+            <!-- Info panel beneath canvas -->
+            <div class="specimen-info" id="specimenInfo">
+                <div class="info-card">
+                    <h3>How to add your models</h3>
+                    <p>
+                        Place <code>.glb</code>, <code>.gltf</code>, or <code>.obj</code> files in
+                        <code>hosted/models/</code>. They'll be served automatically at
+                        <code>/assets/models/your-file.glb</code>.
+                        Then add an <code>&lt;option&gt;</code> entry in the select above.
+                        Paired <code>.mtl</code> files for OBJ are detected automatically.
+                    </p>
+                </div>
+            </div>
+
+        </section>
+
     </main>
 
-    <video id="bgVideo" src="../assets/media/waterBackground.mp4" preload="true" autoplay loop muted></video>
+    <script src="/assets/viewerBundle.js"></script>
 </body>
 </html>
