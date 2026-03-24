@@ -28,7 +28,7 @@
                 <p class="specimen-subtitle" id="specimenSubtitle">Use the menu below to load a model, then drag to rotate</p>
             </div>
 
-            <!-- Model selector -->
+            {{!-- <!-- Model selector -->
             <div class="model-controls">
                 <label class="control-label" for="modelSelect">Specimen</label>
                 <select id="modelSelect" class="model-select">
@@ -43,11 +43,13 @@
                     <option value="juvenileGreat.obj">Juvenile Great White</option>
 
                 </select>
-            </div>
+            </div> --}}
 
             <!-- Canvas wrapper -->
             <div id="viewerContainer" class="viewer-container">
                 <canvas id="modelCanvas"></canvas>
+                <!-- Model selector -->
+                
                 <div id="viewerStatus" class="viewer-status" style="display:none;"></div>
 
                 <!-- Interaction hint -->
@@ -55,10 +57,43 @@
                     <span>⟳ drag to rotate</span>
                     <span>⊕ scroll to zoom</span>
                 </div>
+                <div class="model-controls">
+                    <label class="control-label" for="modelSelect">Specimen</label>
+                    <select id="modelSelect" class="model-select">
+                        <option value="">— choose a specimen —</option>
+                        <!--
+                            Drop model files into hosted/models/ and add entries here.
+                            GLTF/GLB example:   <option value="great_white.glb">Great White Shark</option>
+                            OBJ example:        <option value="hammerhead.obj">Hammerhead Shark</option>
+                            The viewer.js loader auto-detects the extension.
+                        -->
+                        <option value="placeholder">Placeholder Shark (built-in)</option>
+                        <option value="juvenileGreat.obj">Juvenile Great White</option>
+
+                    </select>
+                </div>
             </div>
 
+             {{!-- <!-- Model selector -->
+            <div class="model-controls">
+                <label class="control-label" for="modelSelect">Specimen</label>
+                <select id="modelSelect" class="model-select">
+                    <option value="">— choose a specimen —</option>
+                    <!--
+                        Drop model files into hosted/models/ and add entries here.
+                        GLTF/GLB example:   <option value="great_white.glb">Great White Shark</option>
+                        OBJ example:        <option value="hammerhead.obj">Hammerhead Shark</option>
+                        The viewer.js loader auto-detects the extension.
+                    -->
+                    <option value="placeholder">Placeholder Shark (built-in)</option>
+                    <option value="juvenileGreat.obj">Juvenile Great White</option>
+
+                </select>
+            </div> --}}
+
+
             <!-- Info panel beneath canvas -->
-            <div class="specimen-info" id="specimenInfo">
+            {{!-- <div class="specimen-info" id="specimenInfo">
                 <div class="info-card">
                     <h3>How to add your models</h3>
                     <p>
@@ -69,7 +104,7 @@
                         Paired <code>.mtl</code> files for OBJ are detected automatically.
                     </p>
                 </div>
-            </div>
+            </div> --}}
 
         </section>
 

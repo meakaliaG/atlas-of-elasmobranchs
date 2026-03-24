@@ -51,7 +51,8 @@ video#bgVideo {
     flex-direction: column;
     align-items: center;
     padding: 18px 24px 14px;
-    background: linear-gradient(to bottom, rgba(2,13,24,0.9) 0%, transparent 100%);
+    /* background: var(--ocean-dark); */
+    background: linear-gradient(to bottom, rgba(2,13,24,0.9) 0%, transparent 90%);
     pointer-events: none;
 }
 
@@ -77,17 +78,19 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 100px 24px 48px;
+    /* padding: 100px 24px 48px; */
 }
+/* canvas { display: block;} */
 
 /* ── Viewer Section ───────────────────────────────────────────────────────── */
 .viewer-section {
     width: 100%;
-    max-width: 900px;
+    /* max-width: 900px; */
     display: flex;
     flex-direction: column;
     gap: 16px;
     animation: fadeUp 0.9s ease both;
+    height: 100%;
 }
 
 @keyframes fadeUp {
@@ -197,7 +200,7 @@ main {
 /* ── Interaction Hint ─────────────────────────────────────────────────────── */
 .viewer-hint {
     position: absolute;
-    bottom: 14px;
+    top: 100px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -208,6 +211,17 @@ main {
     color: rgba(160, 210, 230, 0.45);
     pointer-events: none;
     transition: opacity 0.4s;
+}
+
+.model-controls {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
 }
 
 .viewer-container:hover .viewer-hint {

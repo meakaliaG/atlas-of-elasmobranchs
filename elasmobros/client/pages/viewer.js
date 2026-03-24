@@ -20,7 +20,7 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 
 const scene = new THREE.Scene();
 
@@ -50,7 +50,7 @@ renderer.domElement.addEventListener('pointerup',   () => { controls.autoRotate 
 // ─── Lighting ────────────────────────────────────────────────────────────────
 
 // Ambient — cool blue-tinted underwater feel
-const ambient = new THREE.AmbientLight(0x88ccff, 0.6);
+const ambient = new THREE.AmbientLight(0x88ccff, 0.9);
 scene.add(ambient);
 
 // Key light from above (sun filtering through water)
@@ -80,7 +80,7 @@ const floorMat = new THREE.MeshStandardMaterial({
     roughness: 0.8,
     metalness: 0.1,
     transparent: true,
-    opacity: 0.35,
+    opacity: 0.1,
 });
 const floor = new THREE.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
@@ -89,8 +89,8 @@ floor.receiveShadow = true;
 scene.add(floor);
 
 // ─── Procedural Shark Placeholder ───────────────────────────────────────────
-// Visible only until a real model is loaded. Delete this block once you load
-// your own GLTF/OBJ, or call removePlaceholder() before loadModel().
+// Visible only until a real model is loaded. Delete this block once models are loaded
+// GLTF/OBJ, or call removePlaceholder() before loadModel().
 
 let placeholderGroup = null;
 
@@ -338,11 +338,11 @@ window.addEventListener('resize', onResize);
 
 // ─── Render Loop ─────────────────────────────────────────────────────────────
 
-const clock = new THREE.Clock();
+const timer = new THREE.Timer();
 
 const animate = () => {
     requestAnimationFrame(animate);
-    const t = clock.getElapsedTime();
+    const t = timer.getElapsed();
 
     // Gentle undulation on the placeholder shark
     if (placeholderGroup) {
