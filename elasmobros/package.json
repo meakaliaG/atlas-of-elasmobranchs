@@ -20,8 +20,9 @@
     "Login"
   ],
   "devDependencies": {
-    "@babel/core": "^7.28.6",
-    "@babel/preset-env": "^7.28.6",
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-react": "^7.28.5",
     "babel-loader": "^10.0.0",
     "eslint": "^8.57.1",
     "eslint-config-airbnb": "^19.0.4",
@@ -30,6 +31,7 @@
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
+    "babel": "^5.8.38",
     "bcrypt": "^6.0.0",
     "compression": "^1.8.1",
     "connect-redis": "^9.0.0",
@@ -39,8 +41,10 @@
     "express-sessions": "^1.0.6",
     "helmet": "^8.1.0",
     "mongoose": "^9.1.5",
+    "preset-react": "^1.0.0",
     "redis": "^5.10.0",
     "serve-favicon": "^2.5.1",
+    "three": "^0.183.1",
     "underscore": "^1.13.7"
   }
 }
