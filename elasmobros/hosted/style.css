@@ -1,283 +1,218 @@
-/* ── Reset & Base ─────────────────────────────────────────────────────────── */
-* {
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
+/* ── Design Tokens ───────────────────────────────────────────────────────── */
 :root {
-    --ocean-dark:    #020d18;
-    --ocean-mid:     #04233a;
-    --ocean-blue:    #0a4a6e;
+    --ocean-abyss:   #00060f;
+    --ocean-deep:    #000d1a;
     --biolume:       #00d4ff;
-    --biolume-glow:  rgba(0, 212, 255, 0.18);
-    --text-primary:  #d0eeff;
-    --text-muted:    #6fa8c8;
-    --panel-bg:      rgba(2, 18, 32, 0.72);
-    --panel-border:  rgba(0, 180, 230, 0.2);
+    --biolume-dim:   rgba(0, 180, 220, 0.15);
+    --biolume-glow:  rgba(0, 212, 255, 0.08);
+    --text-primary:  #c8e8f8;
+    --text-muted:    #4a7a96;
     --font-display:  'Cinzel', serif;
     --font-body:     'Raleway', sans-serif;
+    --nav-height:    56px;
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-body {
+/* ── Base ────────────────────────────────────────────────────────────────── */
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--ocean-abyss);
     font-family: var(--font-body);
     font-weight: 300;
     color: var(--text-primary);
-    background: var(--ocean-dark);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    overflow-x: hidden;
 }
 
-/* ── Background Video ─────────────────────────────────────────────────────── */
-video#bgVideo {
+/* ── Canvas — the full-screen 3D scene ───────────────────────────────────── */
+canvas#modelCanvas {
     position: fixed;
     inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: -1;
-    opacity: 0.45;
+    width: 100vw !important;
+    height: 100vh !important;
+    display: block;
+    z-index: 0;
+    touch-action: none; /* pass pointer events cleanly to Three.js controls */
 }
 
-/* ── Nav ──────────────────────────────────────────────────────────────────── */
+/* ── Nav ─────────────────────────────────────────────────────────────────── */
 .site-nav {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    z-index: 100;
+    z-index: 20;
+    height: var(--nav-height);
     display: flex;
-    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px 28px 0;
+    /* Gradient mask so it fades naturally into the scene */
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 6, 15, 0.75) 0%,
+        rgba(0, 6, 15, 0.35) 60%,
+        transparent 100%
+    );
+    /* Extends gradient below the nav box */
+    padding-bottom: 32px;
+    height: auto;
+    pointer-events: none; /* let clicks/drags pass through to canvas */
+
+    /* Retract transition */
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+        opacity 0.55s var(--ease-out-expo),
+        transform 0.55s var(--ease-out-expo);
+}
+
+.site-nav.nav-hidden {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+.nav-inner {
+    display: flex;
     align-items: center;
-    padding: 18px 24px 14px;
-    /* background: var(--ocean-dark); */
-    background: linear-gradient(to bottom, rgba(2,13,24,0.9) 0%, transparent 90%);
-    pointer-events: none;
+    gap: 12px;
 }
 
 .nav-title {
     font-family: var(--font-display);
-    font-size: clamp(1rem, 2.5vw, 1.5rem);
-    letter-spacing: 0.2em;
+    font-size: clamp(0.8rem, 1.6vw, 1.05rem);
+    font-weight: 400;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--text-primary);
+}
+
+.nav-divider {
+    color: var(--text-muted);
+    font-size: 0.9rem;
 }
 
 .nav-sub {
-    font-size: 0.7rem;
-    letter-spacing: 0.3em;
+    font-size: clamp(0.6rem, 1vw, 0.7rem);
+    letter-spacing: 0.28em;
     text-transform: uppercase;
     color: var(--text-muted);
-    margin-top: 3px;
 }
 
-/* ── Main Layout ──────────────────────────────────────────────────────────── */
-main {
-    min-height: 100vh;
+/* ── Corner Hints ────────────────────────────────────────────────────────── */
+.corner-hints {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    /* padding: 100px 24px 48px; */
-}
-/* canvas { display: block;} */
-
-/* ── Viewer Section ───────────────────────────────────────────────────────── */
-.viewer-section {
-    width: 100%;
-    /* max-width: 900px; */
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    animation: fadeUp 0.9s ease both;
-    height: 100%;
+    gap: 28px;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(100, 160, 190, 0.3);
+    pointer-events: none;
+    /* Fade out after the user has been in the scene a while */
+    animation: hintsOut 1s ease 5s forwards;
 }
 
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(28px); }
-    to   { opacity: 1; transform: translateY(0); }
+@keyframes hintsOut {
+    to { opacity: 0; }
 }
 
-/* ── Specimen Header ──────────────────────────────────────────────────────── */
-.viewer-header {
-    text-align: center;
+/* ── Specimen Overlay ────────────────────────────────────────────────────── */
+/*  Lower-right corner card that shows specimen info when a real model loads  */
+.specimen-overlay {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 20;
+    text-align: right;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
-.specimen-title {
+.specimen-overlay.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.specimen-name {
     font-family: var(--font-display);
-    font-size: clamp(1.4rem, 4vw, 2.4rem);
+    font-size: clamp(0.9rem, 2vw, 1.25rem);
+    letter-spacing: 0.12em;
     font-weight: 400;
-    letter-spacing: 0.1em;
     color: var(--text-primary);
 }
 
-.specimen-subtitle {
-    font-size: 0.8rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-top: 6px;
-}
-
-/* ── Model Controls ───────────────────────────────────────────────────────── */
-.model-controls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    justify-content: center;
-}
-
-.control-label {
-    font-family: var(--font-display);
-    font-size: 0.7rem;
+.specimen-class {
+    font-size: 0.65rem;
     letter-spacing: 0.25em;
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--biolume);
+    margin-top: 4px;
+    opacity: 0.7;
 }
 
-.model-select {
-    background: var(--panel-bg);
-    border: 1px solid var(--panel-border);
-    color: var(--text-primary);
-    font-family: var(--font-body);
-    font-size: 0.85rem;
-    padding: 8px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    backdrop-filter: blur(8px);
-    min-width: 220px;
-}
-
-.model-select:focus,
-.model-select:hover {
-    border-color: var(--biolume);
-    box-shadow: 0 0 0 3px var(--biolume-glow);
-}
-
-.model-select option {
-    background: var(--ocean-mid);
-    color: var(--text-primary);
-}
-
-/* ── Viewer Canvas Container ──────────────────────────────────────────────── */
-.viewer-container {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    border-radius: 8px;
-    overflow: hidden;
-    background: linear-gradient(160deg, rgba(4,35,58,0.85) 0%, rgba(2,13,24,0.92) 100%);
-    border: 1px solid var(--panel-border);
-    box-shadow:
-        0 0 0 1px rgba(0,180,230,0.08),
-        0 24px 60px rgba(0,0,0,0.6),
-        inset 0 1px 0 rgba(0,180,230,0.12);
-    backdrop-filter: blur(12px);
-}
-
-.viewer-container canvas {
-    width: 100% !important;
-    height: 100% !important;
-    display: block;
-}
-
-/* ── Status Overlay ───────────────────────────────────────────────────────── */
-.viewer-status {
-    position: absolute;
+/* ── Viewer Status (loading / error) ─────────────────────────────────────── */
+#viewerStatus {
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 0.8rem;
-    letter-spacing: 0.15em;
+    z-index: 30;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--biolume);
     pointer-events: none;
-    text-align: center;
+    display: none;
 }
 
-/* ── Interaction Hint ─────────────────────────────────────────────────────── */
-.viewer-hint {
-    position: absolute;
-    top: 100px;
+/* ── Error Toast ──────────────────────────────────────────────────────────── */
+#domoMessage {
+    position: fixed;
+    bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
-    display: flex;
-    gap: 20px;
-    font-size: 0.68rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: rgba(160, 210, 230, 0.45);
-    pointer-events: none;
-    transition: opacity 0.4s;
-}
-
-.model-controls {
-    position: absolute;
-    bottom: 14px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 20px;
-    font-size: 0.68rem;
-    letter-spacing: 0.15em;
-}
-
-.viewer-container:hover .viewer-hint {
-    opacity: 0;
-}
-
-/* ── Info Card ────────────────────────────────────────────────────────────── */
-.specimen-info {
-    animation: fadeUp 1.1s ease 0.2s both;
-}
-
-.info-card {
-    background: var(--panel-bg);
-    border: 1px solid var(--panel-border);
-    border-radius: 6px;
-    padding: 20px 24px;
-    backdrop-filter: blur(8px);
-}
-
-.info-card h3 {
-    font-family: var(--font-display);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--biolume);
-    margin-bottom: 10px;
-}
-
-.info-card p {
-    font-size: 0.82rem;
-    line-height: 1.7;
-    color: var(--text-muted);
-}
-
-.info-card code {
+    z-index: 40;
+    background: rgba(160, 20, 20, 0.25);
+    border: 1px solid rgba(255, 70, 70, 0.3);
+    border-radius: 4px;
+    padding: 10px 20px;
+    color: #ff9090;
     font-size: 0.78rem;
-    background: rgba(0, 180, 230, 0.1);
-    border: 1px solid rgba(0, 180, 230, 0.2);
-    border-radius: 3px;
-    padding: 1px 5px;
-    color: var(--biolume);
-    font-family: 'Courier New', monospace;
+    letter-spacing: 0.1em;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    transition: opacity 0.3s;
 }
 
-/* ── Loading Dots (retained from original) ───────────────────────────────── */
+#domoMessage.hidden {
+    display: none;
+}
+
+/* ── Loading Dots ─────────────────────────────────────────────────────────── */
 .loader {
     display: flex;
-    flex-direction: row;
     gap: 10px;
 }
 
 .loader .dot {
-    width: 10px;
-    height: 10px;
-    background-color: rgba(213, 248, 248, 0.874);
+    width: 8px;
+    height: 8px;
+    background: rgba(0, 212, 255, 0.7);
     border-radius: 50%;
     animation: bounce 0.5s infinite alternate;
 }
@@ -286,36 +221,21 @@ main {
 .loader .dot:nth-child(3) { animation-delay: 200ms; }
 
 @keyframes bounce {
-    100% { translate: 0 -10px; }
+    100% { translate: 0 -8px; }
 }
 
-/* ── Error Message ────────────────────────────────────────────────────────── */
-#domoMessage {
-    background: rgba(180, 30, 30, 0.2);
-    border: 1px solid rgba(255, 80, 80, 0.3);
-    border-radius: 4px;
-    padding: 10px 16px;
-    color: #ff9090;
-    font-size: 0.82rem;
-    text-align: center;
-}
+/* ── Mobile ───────────────────────────────────────────────────────────────── */
+@media (max-width: 540px) {
+    .nav-divider,
+    .nav-sub { display: none; }
 
-#domoMessage.hidden {
-    display: none;
-}
-
-/* ── Responsive ───────────────────────────────────────────────────────────── */
-@media (max-width: 600px) {
-    .model-controls {
-        flex-direction: column;
-        align-items: stretch;
+    .nav-title {
+        font-size: 0.75rem;
+        letter-spacing: 0.18em;
     }
-    .model-select {
-        min-width: unset;
-        width: 100%;
-    }
-    .viewer-hint {
-        gap: 12px;
-        font-size: 0.6rem;
+
+    .specimen-overlay {
+        bottom: 60px;
+        right: 16px;
     }
 }

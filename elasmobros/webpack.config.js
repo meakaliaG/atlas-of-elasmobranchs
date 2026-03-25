@@ -3,6 +3,7 @@ const path = require('path');
 module.exports = {
     entry: {
         viewer: './client/pages/viewer.js',
+        nav: './client/pages/nav.js',
         // Uncomment as you add more pages:
         // login:     './client/pages/login.jsx',
         // dashboard: './client/pages/dashboard.jsx',
