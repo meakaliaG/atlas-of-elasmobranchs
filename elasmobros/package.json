@@ -1,7 +1,7 @@
 {
   "name": "atlas-of-elasmobranchs",
   "version": "1.0.0",
-  "description": "A virtual elasmobranch aquarium using Node.js, Mongo and Redis",
+  "description": "A virtual elasmobranch aquarium using Node.js, React, Three.js and Redis",
   "main": "./server/app.js",
   "author": "Meakalia Gilman",
   "scripts": {
@@ -27,6 +27,8 @@
     "eslint": "^8.57.1",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-plugin-import": "^2.32.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1"
   },
