@@ -22,6 +22,7 @@ const redis = require('redis');
 const router = require('./router.js');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
+//const port = 3000;
 
 const dbURI = process.env.MOGODB_URI || 'mongodb://localhost/Elasmobranch';
 mongoose.connect(dbURI).catch((err) => {
