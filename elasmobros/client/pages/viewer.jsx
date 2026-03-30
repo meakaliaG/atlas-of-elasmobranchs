@@ -216,7 +216,7 @@ const causticLights = CAUSTIC_DEFS.map((def, i) => {
     light.position.set(Math.cos(phase) * 7, 4 + i * 0.6, Math.sin(phase) * 7);
     scene.add(light);
     return { light, phase, base: def.base, speed: 0.28 + i * 0.04 };
-});
+}); 
 
 // ── God Rays ──────────────────────────────────────────────────────────────────
 
