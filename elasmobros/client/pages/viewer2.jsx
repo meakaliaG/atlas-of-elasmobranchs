@@ -2,10 +2,6 @@
  * viewer.jsx — Elasmobranch Atlas
  *
  * Three.js underwater scene + React info panel.
- * Follows the DomoMaker client architecture:
- *   - React components rendered via createRoot into #panelMount
- *   - Layer buttons wired through React onClick (no inline HTML handlers)
- *   - Three.js <-> React bridged via module-level setter refs
  */
 
 const React      = require('react');
@@ -34,23 +30,13 @@ const SPECIMEN_CATALOG = {
         description: 'Born fully formed and immediately independent, juvenile great whites hunt bony fish and rays in coastal shallows before transitioning to marine mammal prey as adults. Their dermal denticles — microscopic tooth-like scales — streamline flow and nearly silence passage through water.',
         anatomy: 'The cartilaginous skeleton is lighter and more flexible than bone, enabling the tight-radius turns juveniles rely on for reef hunting. Slow-twitch red muscle fibers sustain continuous cruising; dense fast-twitch white fibers power explosive acceleration.',
         layers: {
-            // Each entry points to the OBJ that represents that anatomical depth.
-            // Drop paired files in hosted/models/ and update obj/mtl paths here.
-            skin: {
-                label: 'Dermal · Skin',
-                obj: '/assets/models/greatWhite/gwSkin.obj',
-                mtl: '/assets/models/greatWhite/gwSkin.mtl',
-            },
-            muscle: {
-                label: 'Muscular · Tissue',
-                obj: '/assets/models/greatWhite/gwMuscles.obj',
-                mtl: '/assets/models/greatWhite/gwMuscles.mtl',
-            },
-            skeleton: {
-                label: 'Osseous · Cartilage',
-                obj: '/assets/models/greatWhite/gwCartilage.obj',
-                mtl: '/assets/models/greatWhite/gwCartilage.mtl',
-            },
+            skin:     { label: 'Dermal · Skin',       src: ["/assets/models/greatWhite/gwSkin"] },
+            muscle:   { label: 'Muscular · Tissue',   src: ["/assets/models/greatWhite/gwMuscles", "/assets/models/greatWhite/gwOrgans", "/assets/models/greatWhite/gwCirculatory"] },
+            skeleton: { label: 'Osseous · Cartilage', src: ["/assets/models/greatWhite/gwCartilage"] },
+ 
+            // skin:     { label: 'Dermal · Skin',       color: 0x3f6a88, roughness: 0.55, metalness: 0.12 },
+            // muscle:   { label: 'Muscular · Tissue',   color: 0x7a2020, roughness: 0.80, metalness: 0.00 },
+            // skeleton: { label: 'Osseous · Cartilage', color: 0xd4c9a8, roughness: 0.92, metalness: 0.00 },
         },
     },
 };
@@ -234,7 +220,7 @@ const causticLights = CAUSTIC_DEFS.map((def, i) => {
     light.position.set(Math.cos(phase) * 7, 4 + i * 0.6, Math.sin(phase) * 7);
     scene.add(light);
     return { light, phase, base: def.base, speed: 0.28 + i * 0.04 };
-}); 
+});
 
 // ── God Rays ──────────────────────────────────────────────────────────────────
 
@@ -382,120 +368,48 @@ const swimPos = (t) => {
 };
 
 // ── Model & Layer State ───────────────────────────────────────────────────────
-//
-// skinModel  — the base specimen OBJ, always kept in memory after first load.
-// layerModel — the currently visible non-skin layer OBJ, or null.
-// currentModel — whichever of the two is presently active; drives the
-//                showcase/swim animation in the render loop.
 
-let skinModel       = null;  // base specimen (e.g. juvenileGreat.obj)
-let layerModel      = null;  // active layer OBJ currently in the scene, or null
-let currentModel    = null;  // points to skinModel or layerModel
-let currentFileName = null;  // filename key into SPECIMEN_CATALOG
-let activeLayerKey  = 'skin';
+let currentModel    = null;
+let currentFileName = null;
+let storedMaterials = [];
+const layerMatCache = {};
 
-/**
- * Copy the transform (position, rotation, scale) of src onto dst.
- * Used to snap a freshly-loaded layer OBJ into the same pose as
- * the model it is replacing.
- */
-const copyTransform = (src, dst) => {
-    dst.position.copy(src.position);
-    dst.rotation.copy(src.rotation);
-    dst.scale.copy(src.scale);
+const getLayerMat = (key, def) => {
+    if (!layerMatCache[key]) {
+        layerMatCache[key] = new THREE.MeshStandardMaterial({
+            color: def.color, roughness: def.roughness, metalness: def.metalness,
+        });
+    }
+    return layerMatCache[key];
 };
 
-/**
- * Swap the visible model in the scene.
- * Hides `from`, shows `to`, updates currentModel.
- */
-const swapVisible = (from, to) => {
-    if (from) from.visible = false;
-    if (to)   to.visible   = true;
-    currentModel = to;
+const storeModelMaterials = (model) => {
+    storedMaterials = [];
+    model.traverse(child => {
+        if (child.isMesh) storedMaterials.push({ mesh: child, original: child.material });
+    });
 };
 
-/**
- * Load a layer OBJ, position it on top of the current model, then swap it in.
- * @param {string}      layerKey  — 'skin' | 'muscle' | 'skeleton'
- * @param {{ obj, mtl }} layerDef — from SPECIMEN_CATALOG[...].layers[layerKey]
- */
-const loadLayerOBJ = (layerKey, layerDef) => {
+const applyLayer = (layerKey) => {
+    const entry = SPECIMEN_CATALOG[currentFileName];
 
-    console.log("key: "+layerKey, "def: "+layerDef);
-    setStatus('Loading layer…');
+    console.log("entry: " + entry)
+    const def = entry?.layers?.[layerKey];
+    console.log("def: " + def)
 
-    const doLoad = (materials) => {
-        const loader = new OBJLoader();
-        if (materials) loader.setMaterials(materials);
-
-        loader.load(
-            layerDef.obj,
-            (obj) => {
-                // Remove any previously loaded (non-skin) layer
-                if (layerModel) {
-                    scene.remove(layerModel);
-                    layerModel = null;
-                }
-
-                obj.traverse(child => {
-                    if (child.isMesh) {
-                        child.castShadow    = true;
-                        child.receiveShadow = true;
-                        if (!materials) {
-                            child.material = new THREE.MeshStandardMaterial({
-                                color: 0x8aaabb, roughness: 0.55, metalness: 0.1,
-                            });
-                        }
-                    }
-                });
-
-                centerAndScaleModel(obj);
-
-                // Inherit the current model's world transform so the swap is seamless
-                if (currentModel) copyTransform(currentModel, obj);
-
-                layerModel = obj;
-                scene.add(layerModel);
-
-                swapVisible(skinModel, layerModel);
-                activeLayerKey = layerKey;
-                setStatus('');
-            },
-            xhr => setStatus(`Loading… ${Math.round((xhr.loaded / xhr.total) * 100)}%`),
-            err => { console.error(err); setStatus('Failed to load layer.', true); },
-        );
+    const files = [entry.def]
+    for (src in files){
+        loadOBJ(src+'.obj', src+'.mtl')
     };
 
-    if (layerDef.mtl) {
-        new MTLLoader().load(layerDef.mtl, mats => { mats.preload(); doLoad(mats); });
-    } else {
-        doLoad(null);
-    }
-};
-
-/**
- * Switch the visible model to the OBJ defined for `layerKey` in the catalog.
- * Called by the React layer buttons via handleLayerChange.
- */
-const applyLayer = (layerKey) => {
-    if (layerKey === activeLayerKey) return; // already showing this layer
-
-    const entry = SPECIMEN_CATALOG[currentFileName];
-    const layerDef = entry?.layers?.[layerKey];
-    if (!layerDef) return;
-
-    if (layerKey === 'skin') {
-        // Remove the layer OBJ and restore the skin model
-        if (layerModel) {
-            scene.remove(layerModel);
-            layerModel = null;
-        }
-        swapVisible(null, skinModel);
-        activeLayerKey = 'skin';
-    } else {
-        loadLayerOBJ(layerKey, layerDef);
-    }
+    // if (layerKey === 'skin') {
+    //     storedMaterials.forEach(({ mesh, original }) => { mesh.material = original; });
+    // } else {
+    //     const def = entry?.layers?.[layerKey];
+    //     if (!def) return;
+    //     const mat = getLayerMat(layerKey, def);
+    //     storedMaterials.forEach(({ mesh }) => { mesh.material = mat; });
+    // }
 };
 
 // ── Selection State ───────────────────────────────────────────────────────────
@@ -517,9 +431,9 @@ const selectSpecimen = () => {
         tag: 'Marine Specimen', name: 'Unknown Species', latin: '—',
         stats: [], description: '—', anatomy: '—',
         layers: {
-            skin:     { label: 'Dermal · Skin',      obj: null, mtl: null },
-            muscle:   { label: 'Muscular · Tissue',  obj: null, mtl: null },
-            skeleton: { label: 'Osseous · Skeleton', obj: null, mtl: null },
+            skin:     { label: 'Dermal · Skin',       color: 0x4a7090, roughness: 0.55, metalness: 0.1 },
+            muscle:   { label: 'Muscular · Tissue',   color: 0x7a2020, roughness: 0.80, metalness: 0.0 },
+            skeleton: { label: 'Osseous · Skeleton',  color: 0xd4c9a8, roughness: 0.92, metalness: 0.0 },
         },
     };
 
@@ -530,7 +444,6 @@ const selectSpecimen = () => {
     // Drive React panel state via bridge refs
     _setPanelData?.(entry);
     _setPanelOpen?.(true);
-    _setActiveLayer?.('skin');
 
     // Non-React DOM — dimmer, badge, hint, nav
     document.getElementById('sceneDim')?.classList.add('active');
@@ -543,14 +456,8 @@ const deselectSpecimen = () => {
     if (!isSelected) return;
     isSelected = false;
 
-    // Drop any loaded layer OBJ and restore the skin model
-    if (layerModel) {
-        scene.remove(layerModel);
-        layerModel = null;
-    }
-    if (skinModel) skinModel.visible = true;
-    currentModel   = skinModel;
-    activeLayerKey = 'skin';
+    // Restore skin layer materials
+    storedMaterials.forEach(({ mesh, original }) => { mesh.material = original; });
 
     // Drive React panel state
     _setPanelOpen?.(false);
@@ -619,22 +526,19 @@ const centerAndScaleModel = (object) => {
 export const loadGLTF = (url) => {
     setStatus('Loading model…');
     if (sharkRoot) sharkRoot.visible = false;
-    if (skinModel)  { scene.remove(skinModel);  skinModel  = null; }
-    if (layerModel) { scene.remove(layerModel); layerModel = null; }
-    currentModel   = null;
-    activeLayerKey = 'skin';
+    if (currentModel) scene.remove(currentModel);
 
     new GLTFLoader().load(
         url,
         (gltf) => {
-            skinModel       = gltf.scene;
             currentModel    = gltf.scene;
             currentFileName = url.split('/').pop();
-            skinModel.traverse(child => {
+            currentModel.traverse(child => {
                 if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
             });
-            centerAndScaleModel(skinModel);
-            scene.add(skinModel);
+            centerAndScaleModel(currentModel);
+            storeModelMaterials(currentModel);
+            scene.add(currentModel);
             setStatus('');
         },
         xhr => setStatus(`Loading… ${Math.round((xhr.loaded / xhr.total) * 100)}%`),
@@ -645,10 +549,7 @@ export const loadGLTF = (url) => {
 export const loadOBJ = (objUrl, mtlUrl = null) => {
     setStatus('Loading model…');
     if (sharkRoot) sharkRoot.visible = false;
-    if (skinModel)  { scene.remove(skinModel);  skinModel  = null; }
-    if (layerModel) { scene.remove(layerModel); layerModel = null; }
-    currentModel   = null;
-    activeLayerKey = 'skin';
+    if (currentModel) scene.remove(currentModel);
 
     const doLoad = (materials) => {
         const loader = new OBJLoader();
@@ -657,7 +558,6 @@ export const loadOBJ = (objUrl, mtlUrl = null) => {
         loader.load(
             objUrl,
             (obj) => {
-                skinModel       = obj;
                 currentModel    = obj;
                 currentFileName = objUrl.split('/').pop();
                 obj.traverse(child => {
@@ -672,6 +572,7 @@ export const loadOBJ = (objUrl, mtlUrl = null) => {
                     }
                 });
                 centerAndScaleModel(obj);
+                storeModelMaterials(obj);
                 scene.add(obj);
                 setStatus('');
             },
@@ -802,7 +703,14 @@ const init = () => {
     }
 
     // Load the default specimen
-    loadOBJ('/assets/models/juvenileGreat.obj', '/assets/models/juvenileGreat.mtl');
+    //loadOBJ('/assets/models/juvenileGreat.obj', '/assets/models/juvenileGreat.mtl');
+
+    // loadOBJ('/assets/models/greatWhite/gwCartilage.obj', '/assets/models/greatWhite/gwCartilage.mtl');
+    // loadOBJ('/assets/models/greatWhite/gwCirculatory.obj', '/assets/models/greatWhite/gwCirculatory.mtl');
+    // loadOBJ('/assets/models/greatWhite/gwOrgans.obj', '/assets/models/greatWhite/gwOrgans.mtl');
+    // loadOBJ('/assets/models/greatWhite/gwMuscles.obj', '/assets/models/greatWhite/gwMuscles.mtl');
+    loadOBJ('/assets/models/greatWhite/gwSkin.obj', '/assets/models/greatWhite/gwSkin.mtl');
+
 
     // Start render loop
     animate();

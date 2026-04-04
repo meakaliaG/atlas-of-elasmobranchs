@@ -1,0 +1,12 @@
+# Blender 5.1.0 MTL File: 'GreatWhite.blend'
+# www.blender.org
+
+newmtl standardSurface2.001
+Ns 333.368774
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 2
+map_Kd uvskinpaint2.psd
+map_d uvskinpaint2.psd

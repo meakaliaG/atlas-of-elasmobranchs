@@ -13,7 +13,7 @@ const path = require('path');
 const express = require('express');
 const compression = require('compression');
 const favicon = require('serve-favicon');
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
 const expressHandlebars = require('express-handlebars');
 const helmet = require('helmet');
 const session = require('express-session');
@@ -22,14 +22,15 @@ const redis = require('redis');
 const router = require('./router.js');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
+//const port = 3000;
 
-const dbURI = process.env.MOGODB_URI || 'mongodb://localhost/Elasmobranch';
-mongoose.connect(dbURI).catch((err) => {
-    if(err) {
-        console.log('Could not connect to database');
-        throw err;
-    }
-});
+// const dbURI = process.env.MOGODB_URI || 'mongodb://localhost/Elasmobranch';
+// mongoose.connect(dbURI).catch((err) => {
+//     if(err) {
+//         console.log('Could not connect to database');
+//         throw err;
+//     }
+// });
 
 const redisClient = redis.createClient({
     url: process.env.REDISCLOUD_URL,
