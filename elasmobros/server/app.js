@@ -41,7 +41,15 @@ redisClient.on('err', err => console.log('Redis Client Error', err));
 redisClient.connect().then(() => {
     const app = express();
 
-    app.use(helmet());
+    // app.use(helmet());
+    app.use(helmet.contentSecurityPolicy({
+    directives: {
+        defaultSrc: ["'self'"],
+        connectSrc: ["'self'", "blob:"],
+        imgSrc:     ["'self'", "blob:", "data:"],
+        workerSrc:  ["'self'", "blob:"],
+    }
+}));
     app.use('/assets', express.static(path.resolve(`${__dirname}/../hosted`)));
     //app.use(favicon(`${__dirname}/../hosted/img/favicon.png`));
     app.use(compression());
